@@ -6,34 +6,65 @@ module FCleaner
   PROFILE_URL = "#{FACEBOOK_URL}/profile"
   ACTIVITY_LOG_URL_TEXT = 'Activity Log'
 
-  def self.init(mail, pass)
-    @mail = mail
-    @pass = pass
-    @mech = Mechanize.new { |agent| agent.user_agent_alias = 'iPhone' }
-  end
+  class Scraper
+    def initialize
+      @agent = Mechanize.new { |agent| agent.user_agent_alias = 'iPhone' }
+    end
 
-  def self.get_user_id()
-    @profile_page ||= @mech.get(PROFILE_URL)
-    link = @profile_page.links_with(:text => ACTIVITY_LOG_URL_TEXT).first
-    @user_id = link.href.gsub(/^#{FACEBOOK_URL}\//,'').gsub(/\/.*$/, '')
-  end
+    def profile_page
+      Page.new @agent.get(PROFILE_URL)
+    end
 
-  def self.get_registration_year()
-    page = @mech.get(activity_log_url)
-    year_links = page.parser.xpath("//div[@id[starts-with(.,'year_')]]")
-    reg_year = year_links.collect do |x|
-      x.attribute('id').to_s.gsub(/^year_/, '')
-    end.min
-
-    if reg_year
-      reg_year
-    else
-      Date.today.year
+    def activity_log(user_id)
+      url = "#{FACEBOOK_URL}/#{user_id}/allactivity"
+      Page.new @agent.get(url)
     end
   end
 
-  def self.activity_log_url()
-    "#{FACEBOOK_URL}/#{@user_id}/allactivity"
+  class Page
+    def initialize(page)
+      @page = page
+    end
+
+    def activity_log_link
+      @page.links_with(:text => ACTIVITY_LOG_URL_TEXT).first.href
+    end
+
+    def divs_with_id(id)
+      @page.parser.xpath("//div[@id[starts-with(.,'#{id}')]]")
+    end
+  end
+
+  class User
+    attr_accessor :mail, :pass, :reg_year, :id
+
+    def initialize(mail, pass)
+      @mail = mail
+      @pass = pass
+    end
+  end
+
+  def self.init(mail, pass)
+    @user = User.new mail, pass
+    @mech = Scraper.new
+  end
+
+  def self.get_user_id
+    activity_log_link = @mech.profile_page.activity_log_link
+    @user.id = activity_log_link.match(%r{/(\d+)/}).captures.first
+  end
+
+  def self.get_registration_year
+    divs = @mech.activity_log(@user_id).divs_with_id('year_')
+    years = divs.collect do |div|
+      div.attribute('id').to_s.gsub(/^year_/, '')
+    end
+
+    @user.reg_year = if not years.empty?
+      years.min
+    else
+      Date.today.year
+    end
   end
 end
 
