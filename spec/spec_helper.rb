@@ -1,3 +1,7 @@
+require_relative '../lib/FCleaner'
+require 'pp'
+require 'fakeweb'
+
 RSpec.configure do |config|
   config.mock_with :rspec do |mock|
     mock.verify_doubled_constant_names = true
