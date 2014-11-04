@@ -1,7 +1,8 @@
-require_relative 'FCleaner/version'
 require 'mechanize'
 
 module FCleaner
+  VERSION = "0.0.1"
+
   FACEBOOK_URL = 'https://m.facebook.com'
   PROFILE_URL = "#{FACEBOOK_URL}/profile"
   ACTIVITY_LOG_URL_TEXT = 'Activity Log'
@@ -55,7 +56,7 @@ module FCleaner
   end
 
   def self.get_registration_year
-    divs = @mech.activity_log(@user_id).divs_with_id('year_')
+    divs = @mech.activity_log(@user.id).divs_with_id('year_')
     years = divs.collect do |div|
       div.attribute('id').to_s.gsub(/^year_/, '')
     end
