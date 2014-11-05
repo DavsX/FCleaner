@@ -1,4 +1,4 @@
-require_relative '../lib/FCleaner'
+require_relative '../lib/fcleaner'
 require 'pp'
 require 'fakeweb'
 

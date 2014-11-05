@@ -27,7 +27,7 @@ describe "FCleaner" do
 
   describe "getting registration year" do
     before :each do
-      FCleaner.instance_variable_set(:@user_id, '123456')
+      #FCleaner.instance_variable_set(:@user, '123456')
     end
 
     it "succeeds when user is registered for more than a year" do
