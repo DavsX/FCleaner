@@ -27,39 +27,38 @@ module FCleaner
     end
 
     def user_id
-      unless @user_id
-        profile_page = @agent.get(PROFILE_URL)
-        @user_id = profile_page
-                    .links_with(:text => 'Activity Log')
-                    .first
-                    .href
-                    .match(%r{/(\d+)/})
-                    .captures
-                    .first
-      end
-
-      return @user_id
+      @user_id ||= build_user_id
     end
 
     def reg_year
-      unless @reg_year
-        activity_page = @agent.get("#{HOMEPAGE_URL}/#{self.user_id}/allactivity")
-        year_divs = activity_page
-                    .parser
-                    .xpath("//div[@id[starts-with(.,'year_')]]")
+      @reg_year ||= build_reg_year
+    end
 
-        years = year_divs.collect do |div|
-          div.attribute('id').to_s.gsub(/^year_/, '')
-        end
+    def build_user_id
+        @agent.get(PROFILE_URL)
+          .links_with(:text => 'Activity Log')
+          .first
+          .href
+          .match(%r{/(\d+)/})
+          .captures
+          .first
+    end
 
-        @reg_year = if years.empty?
-                      Date.today.year
-                    else
-                      years.min
-                    end
+    def build_reg_year
+      activity_page = @agent.get("#{HOMEPAGE_URL}/#{self.user_id}/allactivity")
+      year_divs = activity_page
+                  .parser
+                  .xpath("//div[@id[starts-with(.,'year_')]]")
+
+      years = year_divs.collect do |div|
+        div.attribute('id').to_s.gsub(/^year_/, '')
       end
 
-      return @reg_year
+      if years.empty?
+        Date.today.year
+      else
+        years.min
+      end
     end
   end
 
