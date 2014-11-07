@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Davs"]
   spec.email         = ["kovdavid@gmail.com"]
   spec.summary       = %q{Cleanes one's Facebook Activity Log}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/DavsX/FCleaner"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
