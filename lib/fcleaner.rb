@@ -35,13 +35,13 @@ module FCleaner
     end
 
     def build_user_id
-        @agent.get(PROFILE_URL)
-          .links_with(:text => 'Activity Log')
-          .first
-          .href
-          .match(%r{/(\d+)/})
-          .captures
-          .first
+      @agent.get(PROFILE_URL)
+        .links_with(:text => 'Activity Log')
+        .first
+        .href
+        .match(%r{/(\d+)/})
+        .captures
+        .first
     end
 
     def build_reg_year
