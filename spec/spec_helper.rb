@@ -1,5 +1,5 @@
 require_relative '../lib/fcleaner'
-require 'pp'
+require 'awesome_print'
 require 'fakeweb'
 
 RSpec.configure do |config|
@@ -7,3 +7,5 @@ RSpec.configure do |config|
     mock.verify_doubled_constant_names = true
   end
 end
+
+FakeWeb.allow_net_connect = false

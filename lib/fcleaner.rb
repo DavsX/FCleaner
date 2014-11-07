@@ -1,81 +1,67 @@
 require 'mechanize'
 
 module FCleaner
-  VERSION = "0.0.1"
+  HOMEPAGE_URL = "https://m.facebook.com".freeze
+  LOGIN_URL    = "https://m.facebook.com/login.php".freeze
+  PROFILE_URL  = "https://m.facebook.com/profile".freeze
 
-  FACEBOOK_URL = 'https://m.facebook.com'
-  PROFILE_URL = "#{FACEBOOK_URL}/profile"
-  ACTIVITY_LOG_URL_TEXT = 'Activity Log'
+  class ActivityLog
+    attr_reader :email, :pass
 
-  class Scraper
-    def initialize
+    def initialize(email, pass)
+      @email = email
+      @pass = pass
       @agent = Mechanize.new { |agent| agent.user_agent_alias = 'iPhone' }
     end
 
-    def profile_page
-      Page.new @agent.get(PROFILE_URL)
+    def login
+      home_page = @agent.get(HOMEPAGE_URL)
+      login_form = home_page.form
+      login_form.field_with(:name => 'email').value = @email
+      login_form.field_with(:name => 'pass').value = @pass
+
+      login_page = @agent.submit login_form
+      if login_page.body.match('Your password was incorrect.')
+        raise InvalidLoginCredentials, "Your password was incorrect."
+      end
     end
 
-    def activity_log(user_id)
-      url = "#{FACEBOOK_URL}/#{user_id}/allactivity"
-      Page.new @agent.get(url)
-    end
-  end
+    def user_id
+      unless @user_id
+        profile_page = @agent.get(PROFILE_URL)
+        @user_id = profile_page
+                    .links_with(:text => 'Activity Log')
+                    .first
+                    .href
+                    .match(%r{/(\d+)/})
+                    .captures
+                    .first
+      end
 
-  class Page
-    def initialize(page)
-      @page = page
-    end
-
-    def activity_log_link
-      @page.links_with(:text => ACTIVITY_LOG_URL_TEXT).first.href
-    end
-
-    def divs_with_id(id)
-      @page.parser.xpath("//div[@id[starts-with(.,'#{id}')]]")
-    end
-  end
-
-  class User
-    attr_accessor :mail, :pass, :reg_year, :id
-
-    def initialize(mail, pass)
-      @mail = mail
-      @pass = pass
-    end
-  end
-
-  def self.init(mail, pass)
-    @user = User.new mail, pass
-    @mech = Scraper.new
-  end
-
-  def self.get_user_id
-    activity_log_link = @mech.profile_page.activity_log_link
-    @user.id = activity_log_link.match(%r{/(\d+)/}).captures.first
-  end
-
-  def self.get_registration_year
-    divs = @mech.activity_log(@user.id).divs_with_id('year_')
-    years = divs.collect do |div|
-      div.attribute('id').to_s.gsub(/^year_/, '')
+      return @user_id
     end
 
-    @user.reg_year = if not years.empty?
-      years.min
-    else
-      Date.today.year
+    def reg_year
+      unless @reg_year
+        activity_page = @agent.get("#{HOMEPAGE_URL}/#{self.user_id}/allactivity")
+        year_divs = activity_page
+                    .parser
+                    .xpath("//div[@id[starts-with(.,'year_')]]")
+
+        years = year_divs.collect do |div|
+          div.attribute('id').to_s.gsub(/^year_/, '')
+        end
+
+        @reg_year = if years.empty?
+                      Date.today.year
+                    else
+                      years.min
+                    end
+      end
+
+      return @reg_year
     end
   end
+
+  class InvalidLoginCredentials < Exception; end;
 end
-
-#search_form = page.form
-#search_form.field_with(:name => 'email').value = 'davserer@gmail.com'
-#search_form.field_with(:name => 'pass').value = 'mypassword'
-
-#new_page = agent.submit search_form
-
-#puts new_page
-#
-#require 'date'
-#Date.new(2014, 5, -1)
