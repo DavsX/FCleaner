@@ -79,7 +79,7 @@ describe "FCleaner/ActivityLog" do
     end
 
     it 'succeeds when the user is registered for less than a year' do
-      html = File.read('spec/mock_html/allactivity_reg_date_less_than_year.html')
+      html = File.read('spec/mock_html/activity_log.html')
       FakeWeb.register_uri( :get, "https://m.facebook.com/123456/allactivity",
                             :body => html,
                             :content_type => 'text/html')
