@@ -45,8 +45,7 @@ module FCleaner
     end
 
     def build_reg_year
-      activity_page = @agent.get("#{HOMEPAGE_URL}/#{self.user_id}/allactivity")
-      year_divs = activity_page
+      year_divs = @agent.get("#{HOMEPAGE_URL}/#{self.user_id}/allactivity")
                   .parser
                   .xpath("//div[@id[starts-with(.,'year_')]]")
 
