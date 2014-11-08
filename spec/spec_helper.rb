@@ -1,5 +1,4 @@
 require_relative '../lib/fcleaner'
-require 'awesome_print'
 require 'date'
 require 'webmock/rspec'
 

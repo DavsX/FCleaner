@@ -5,6 +5,12 @@ describe "FCleaner/ActivityLog" do
     @alog = FCleaner::ActivityLog.new 'myemail', 'mypass'
   end
 
+  describe "VERSION" do
+    it 'should not be nil' do
+      expect(FCleaner::VERSION).not_to be_nil
+    end
+  end
+
   describe "#initialize" do
     it "stores email and password" do
       expect(@alog.email).to eq('myemail')
