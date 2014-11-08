@@ -83,6 +83,25 @@ describe "FCleaner/ActivityLog" do
     end
   end
 
+  describe "#clean" do
+    it 'should call #clean_month' do
+      allow($stdout).to receive(:puts)
+
+      @alog.instance_variable_set(:@reg_year, 2013)
+
+      allow(Date).to receive(:today).and_return(Date.parse("2014-03-31"))
+
+      1.upto(12).each do |month|
+        expect(@alog).to receive(:clean_month).with(2013, month).once
+      end
+      1.upto(3).each do |month|
+        expect(@alog).to receive(:clean_month).with(2014, month).once
+      end
+
+      @alog.clean
+    end
+  end
+
   describe "#clean_month" do
     it 'opens all the appropriate links' do
       @alog.instance_variable_set(:@user_id, 123456)

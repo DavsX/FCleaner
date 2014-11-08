@@ -31,6 +31,17 @@ module FCleaner
       "#{HOMEPAGE_URL}/#{user_id}/allactivity?timeend=#{timestamp}"
     end
 
+    def clean
+      start_date = Date.new(@reg_year, 1, 1)
+      today = Date.today
+      end_date = Date.new(today.year, today.month, 1)
+
+      (start_date..end_date).select {|d| d.day == 1}.each do |date|
+        puts "Cleaning #{date}"
+        clean_month(date.year, date.month)
+      end
+    end
+
     def clean_month(year, month)
       timestamp = DateTime.new(year, month, -1, 23, 59, 59).to_time.to_i
       activity_url = activity_page_url(timestamp)
@@ -42,18 +53,18 @@ module FCleaner
                     .xpath("//div[@id[starts-with(.,'u_0_')]]")
 
       activities.each do |activity|
-        link = if !activity.xpath('.//a[text()="Delete"]').empty?
-                 activity.xpath('.//a[text()="Delete"]')
-               elsif !activity.xpath('.//a[text()="Delete Photo"]').empty?
-                 activity.xpath('.//a[text()="Delete Photo"]')
-               elsif !activity.xpath('.//a[text()="Unlike"]').empty?
-                 activity.xpath('.//a[text()="Unlike"]')
-               elsif !activity.xpath('.//a[text()="Hide from Timeline"]').empty?
-                 activity.xpath('.//a[text()="Hide from Timeline"]')
-               end
+        action = ['Delete','Delete Photo','Unlike','Hide from Timeline'].detect do
+          |text| !activity.xpath(".//a[text()='#{text}']").empty?
+        end
 
-        if link
-          @agent.get(link.attribute('href').value)
+        if action
+          url = activity
+                  .xpath(".//a[text()='#{action}']")
+                  .first
+                  .attribute('href')
+                  .value
+
+          @agent.get(url)
         end
       end
     end
