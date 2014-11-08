@@ -36,3 +36,12 @@ module FCleaner
         def hide; end
     end
 end
+
+On the activitylog page:
+divs = parser.xpath("//div[@id[starts-with(.,'u_0_')]]")
+divs.eachs do |div|
+    link = div.xpath(".//a[text()='Delete']").attribute('href').value
+end
+
+Load more link:
+    parser.xpath("//h3[text()[starts-with(.,'Load more from')]]/ancestor-or-self::a").attribute('href').value

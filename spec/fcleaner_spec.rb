@@ -5,6 +5,10 @@ describe "FCleaner/ActivityLog" do
     @alog = FCleaner::ActivityLog.new 'myemail', 'mypass'
   end
 
+  after :each do
+    FakeWeb.clean_registry
+  end
+
   describe "#initialize" do
     it "stores email and password" do
       expect(@alog.email).to eq('myemail')
@@ -19,10 +23,6 @@ describe "FCleaner/ActivityLog" do
       FakeWeb.register_uri(:get, FCleaner::HOMEPAGE_URL,
                            :body => @homepage_html,
                            :content_type => 'text/html')
-    end
-
-    after :each do
-      FakeWeb.clean_registry
     end
 
     it "should log in successfully when credentials are good" do
