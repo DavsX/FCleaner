@@ -42,7 +42,7 @@ describe "FCleaner/ActivityLog" do
       expect { @alog.login }.to raise_error(FCleaner::InvalidLoginCredentials)
 
       expect(post_stub.with(
-          :body => hash_including({ :email => 'myemail', :pass => 'mypass' })
+        :body => hash_including({ :email => 'myemail', :pass => 'mypass' })
       )).to have_been_requested.once
     end
   end
@@ -51,7 +51,7 @@ describe "FCleaner/ActivityLog" do
     it 'should get the user id' do
       html = File.read('spec/mock_html/profile.html')
       stub_request(:get, FCleaner::PROFILE_URL).to_return(
-        :body => html, :headers => { "Content-Type" => 'text/html' }
+        :body => html, :headers => { 'Content-Type' => 'text/html' }
       )
 
       expect(@alog.user_id).to eq("100008460938593")
@@ -67,7 +67,7 @@ describe "FCleaner/ActivityLog" do
     it 'succeeds when the user is registered for more than a year' do
       html = File.read('spec/mock_html/allactivity_reg_date.html')
       stub_request(:get, @url).to_return(
-        :body => html, :headers => { "Content-Type" => 'text/html' }
+        :body => html, :headers => { 'Content-Type' => 'text/html' }
       )
 
       expect(@alog.reg_year).to eq("2008")
@@ -76,10 +76,48 @@ describe "FCleaner/ActivityLog" do
     it 'succeeds when the user is registered for less than a year' do
       html = File.read('spec/mock_html/activity_log.html')
       stub_request(:get, @url).to_return(
-        :body => html, :headers => { "Content-Type" => 'text/html' }
+        :body => html, :headers => { 'Content-Type' => 'text/html' }
       )
 
       expect(@alog.reg_year).to eq(Date.today.year)
+    end
+  end
+
+  describe "#clean_month" do
+    it 'opens all the appropriate links' do
+      @alog.instance_variable_set(:@user_id, 123456)
+
+      activity_url = 'https://m.facebook.com/123456/allactivity'
+      cleanup_url = 'https://m.facebook.com/allactivity/edit'
+
+      stub_request(:get, %r/#{activity_url}/).to_return(
+        :body => File.read('spec/mock_html/activity_log.html'),
+        :headers => { 'Content-Type' => 'text/html' }
+      )
+      cleanup_stub = stub_request(:get, %r/#{cleanup_url}/)
+                      .to_return(:body => 'Success')
+
+      @alog.clean_month(2014, 10)
+
+      expectations = [
+        { 'id' => '1',  'action' => 'hide' },
+        { 'id' => '2',  'action' => 'hide' },
+        { 'id' => '3',  'action' => 'unlike' },
+        { 'id' => '4',  'action' => 'hide' },
+        { 'id' => '5',  'action' => 'remove_content' },
+        { 'id' => '6',  'action' => 'remove_content' },
+        { 'id' => '7',  'action' => 'unlike' },
+        { 'id' => '8',  'action' => 'remove_comment' },
+        { 'id' => '9',  'action' => 'unlike' },
+        { 'id' => '10', 'action' => 'remove_content' },
+      ]
+
+      expectations.each do |data|
+        expect(cleanup_stub.with( :query => hash_including({
+          :id     => data['id'],
+          :action => data['action'],
+        }))).to have_been_requested.once
+      end
     end
   end
 end

@@ -1,9 +1,10 @@
 require 'mechanize'
+require 'date'
 
 module FCleaner
   HOMEPAGE_URL = "https://m.facebook.com".freeze
-  LOGIN_URL    = "https://m.facebook.com/login.php".freeze
-  PROFILE_URL  = "https://m.facebook.com/profile".freeze
+  LOGIN_URL    = "#{HOMEPAGE_URL}/login.php".freeze
+  PROFILE_URL  = "#{HOMEPAGE_URL}/profile".freeze
 
   class ActivityLog
     attr_reader :email, :pass
@@ -23,6 +24,37 @@ module FCleaner
       login_page = @agent.submit login_form
       if login_page.body.match('Your password was incorrect.')
         raise InvalidLoginCredentials, "Your password was incorrect."
+      end
+    end
+
+    def activity_page_url(timestamp)
+      "#{HOMEPAGE_URL}/#{user_id}/allactivity?timeend=#{timestamp}"
+    end
+
+    def clean_month(year, month)
+      timestamp = DateTime.new(year, month, -1, 23, 59, 59).to_time.to_i
+      activity_url = activity_page_url(timestamp)
+
+      activity_page = @agent.get(activity_url)
+
+      activities = activity_page
+                    .parser
+                    .xpath("//div[@id[starts-with(.,'u_0_')]]")
+
+      activities.each do |activity|
+        link = if !activity.xpath('.//a[text()="Delete"]').empty?
+                 activity.xpath('.//a[text()="Delete"]')
+               elsif !activity.xpath('.//a[text()="Delete Photo"]').empty?
+                 activity.xpath('.//a[text()="Delete Photo"]')
+               elsif !activity.xpath('.//a[text()="Unlike"]').empty?
+                 activity.xpath('.//a[text()="Unlike"]')
+               elsif !activity.xpath('.//a[text()="Hide from Timeline"]').empty?
+                 activity.xpath('.//a[text()="Hide from Timeline"]')
+               end
+
+        if link
+          @agent.get(link.attribute('href').value)
+        end
       end
     end
 
