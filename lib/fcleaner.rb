@@ -4,19 +4,20 @@ require 'date'
 module FCleaner
   HOMEPAGE_URL = "https://m.facebook.com".freeze
   LOGIN_URL    = "#{HOMEPAGE_URL}/login.php".freeze
-  PROFILE_URL  = "#{HOMEPAGE_URL}/profile".freeze
+  PROFILE_URL  = "#{HOMEPAGE_URL}/profile.php".freeze
 
   class ActivityLog
     attr_reader :email, :pass
 
     def initialize(email, pass)
-      @email = email
-      @pass = pass
+      @email = email.chomp
+      @pass = pass.chomp
       @agent = Mechanize.new { |agent| agent.user_agent_alias = 'iPhone' }
     end
 
     def login
       home_page = @agent.get(HOMEPAGE_URL)
+
       login_form = home_page.form
       login_form.field_with(:name => 'email').value = @email
       login_form.field_with(:name => 'pass').value = @pass
@@ -25,6 +26,8 @@ module FCleaner
       if login_page.body.match('Your password was incorrect.')
         raise InvalidLoginCredentials, "Your password was incorrect."
       end
+
+      puts 'Successfully logged in!'
     end
 
     def activity_page_url(timestamp)
@@ -32,7 +35,7 @@ module FCleaner
     end
 
     def clean
-      start_date = Date.new(@reg_year, 1, 1)
+      start_date = Date.new(reg_year, 1, 1)
       today = Date.today
       end_date = Date.new(today.year, today.month, 1)
 
@@ -64,6 +67,10 @@ module FCleaner
                   .attribute('href')
                   .value
 
+          act_text = activity.xpath(".//a[@class='ce']").text.strip
+
+          puts "#{action} => #{act_text}"
+
           @agent.get(url)
         end
       end
@@ -79,12 +86,12 @@ module FCleaner
 
     def build_user_id
       @agent.get(PROFILE_URL)
-        .links_with(:text => 'Activity Log')
-        .first
-        .href
-        .match(%r{/(\d+)/})
-        .captures
-        .first
+            .links_with(:text => 'Activity Log')
+            .first
+            .href
+            .match(%r{/(\d+)/})
+            .captures
+            .first
     end
 
     def build_reg_year
@@ -96,11 +103,15 @@ module FCleaner
         div.attribute('id').to_s.gsub(/^year_/, '')
       end
 
-      if years.empty?
-        Date.today.year
-      else
-        years.min
-      end
+      reg_year = if years.empty?
+                   Date.today.year
+                 else
+                   years.min
+                 end
+
+      puts "Reg year: #{reg_year}"
+
+      reg_year
     end
   end
 

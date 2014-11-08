@@ -85,8 +85,6 @@ describe "FCleaner/ActivityLog" do
 
   describe "#clean" do
     it 'should call #clean_month' do
-      allow($stdout).to receive(:puts)
-
       @alog.instance_variable_set(:@reg_year, 2013)
 
       allow(Date).to receive(:today).and_return(Date.parse("2014-03-31"))
