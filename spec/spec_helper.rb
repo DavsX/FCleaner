@@ -1,6 +1,6 @@
 require_relative '../lib/fcleaner'
 require 'awesome_print'
-require 'fakeweb'
+require 'webmock/rspec'
 
 RSpec.configure do |config|
   config.mock_with :rspec do |mock|
@@ -8,4 +8,4 @@ RSpec.configure do |config|
   end
 end
 
-FakeWeb.allow_net_connect = false
+WebMock.disable_net_connect!
