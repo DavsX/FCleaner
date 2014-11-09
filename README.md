@@ -1,6 +1,13 @@
 # FCleaner
 
-TODO: Write a gem description
+FCleaner allows you to clean up your Activity Log on Facebook. I like to erase
+my activity on Facebook from time to time, so I created this gem.
+
+This gem is in early stage, use with caution on you own risk!
+
+At this stage, all the Activity Log entries that can be deleted, unliked and 
+hidden gets deleted, unliked and hidden, including your (profile) pictures!
+Search data are not yet deleted.
 
 ## Installation
 
@@ -20,7 +27,41 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+To completely erase you Activity Log, use:
+
+```ruby
+    $ fcleaner.rb
+    Enter email: email@example.com
+    Enter password: ****
+```
+
+For more fine-grained control you can write your own script:
+
+```ruby
+    #!/usr/bin/env ruby
+
+    require 'io/console'
+    require 'fcleaner'
+
+    print "Enter email: "
+    email = gets.chomp
+
+    print "Enter password: "
+    pass = STDIN.noecho(&:gets).chomp
+
+    puts ''
+
+    activity_log = FCleaner::Activitylog.new email, pass
+    activity_log.login
+
+    activity_log.clean #attempts to erase everything
+
+    #or
+
+    registration_year = activity_log.reg_year
+    activity_log.clean_month(registration_year, 1)
+    activity_log.clean_month(registration_year, 2)
+```
 
 ## Contributing
 
