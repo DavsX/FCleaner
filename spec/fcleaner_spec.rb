@@ -76,7 +76,7 @@ describe "FCleaner/ActivityLog" do
         :body => html, :headers => { 'Content-Type' => 'text/html' }
       )
 
-      expect(@alog.reg_year).to eq("2008")
+      expect(@alog.reg_year).to eq(2008)
     end
 
     it 'succeeds when the user is registered for less than a year' do

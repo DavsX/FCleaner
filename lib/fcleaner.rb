@@ -67,11 +67,15 @@ module FCleaner
                   .attribute('href')
                   .value
 
-          act_text = activity.xpath(".//a[@class='ce']").text.strip
+          act_text = activity.xpath("(.//a)[1]").text.strip
 
           puts "#{action} => #{act_text}"
 
-          @agent.get(url)
+          begin
+            @agent.get(url)
+          rescue
+            puts "FAILED => #{action} => #{act_text}"
+          end
         end
       end
     end
@@ -106,7 +110,7 @@ module FCleaner
       reg_year = if years.empty?
                    Date.today.year
                  else
-                   years.min
+                   years.min.to_i
                  end
 
       puts "Reg year: #{reg_year}"
